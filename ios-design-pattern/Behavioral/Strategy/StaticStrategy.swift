@@ -1,20 +1,19 @@
 //
-//  Strategy.swift
+//  StaticStrategy.swift
 //  ios-design-pattern
 //
-//  Created by Nguyen Thien on 14/12/24.
+//  Created by Nguyen Thien on 15/12/24.
 //
 
-// This is dynamic - runtime
 import Foundation
 
-enum OutputFormat
+enum StaticStrategyOutputFormat
 {
   case markdown
   case html
 }
 
-protocol ListStrategy
+protocol StaticStrategyListStrategy
 {
   init()
   func start(_ buffer: inout String)
@@ -22,7 +21,7 @@ protocol ListStrategy
   func addListItem(buffer: inout String, item: String)
 }
 
-class MarkdownListStrategy : ListStrategy
+class StaticStrategyMarkdownListStrategy : StaticStrategyListStrategy
 {
   required init() {}
   func start(_ buffer: inout String) {}
@@ -33,7 +32,7 @@ class MarkdownListStrategy : ListStrategy
   }
 }
 
-class HtmlListStrategy : ListStrategy
+class StaticStrategyHtmlListStrategy : StaticStrategyListStrategy
 {
   required init() {}
   func start(_ buffer: inout String)
@@ -52,32 +51,11 @@ class HtmlListStrategy : ListStrategy
   }
 }
 
-class TextProcessor : CustomStringConvertible
+class StaticStrategyTextProcessor<LS> : CustomStringConvertible
+  where LS : StaticStrategyListStrategy
 {
   private var buffer = ""
-  private var listStrategy: ListStrategy
-
-  init(_ outputFormat: OutputFormat)
-  {
-    switch outputFormat
-    {
-    case .markdown:
-      listStrategy = MarkdownListStrategy()
-    case .html:
-      listStrategy = HtmlListStrategy()
-    }
-  }
-
-  func setOutputFormat(_ outputFormat: OutputFormat)
-  {
-    switch outputFormat
-    {
-    case .markdown:
-      listStrategy = MarkdownListStrategy()
-    case .html:
-      listStrategy = HtmlListStrategy()
-    }
-  }
+  private let listStrategy = LS()
 
   func appendList(_ items: [String])
   {
@@ -89,25 +67,20 @@ class TextProcessor : CustomStringConvertible
     listStrategy.end(&buffer)
   }
 
-  func clear()
-  {
-    buffer = ""
-  }
-
   var description: String
   {
     return buffer
   }
 }
 
-func mainStrategy()
+func mainStaticStrategy()
 {
-  let tp = TextProcessor(.markdown)
+  // you cannot change the behavior of 'tp' after it's declared
+  let tp = StaticStrategyTextProcessor<StaticStrategyMarkdownListStrategy>()
   tp.appendList(["foo", "bar", "baz"])
   print(tp.description)
 
-  tp.clear()
-  tp.setOutputFormat(.html)
-  tp.appendList(["foo", "bar", "baz"])
-  print(tp.description)
+  let tp2 = StaticStrategyTextProcessor<StaticStrategyHtmlListStrategy>()
+  tp2.appendList(["foo", "bar", "baz"])
+  print(tp2.description)
 }
